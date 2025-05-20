@@ -17,8 +17,14 @@ const PORT = process.env.PORT || 5000;
 connectDB();
 
 // Middleware
-app.use(cors());
-
+app.use(cors({
+  origin: [
+    'https://spacesketch-admin-i9tny1vf9-muhammad-haris-projects-ba1b58dc.vercel.app', // your frontend
+    'http://localhost:5173' // for local dev (optional)
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true // if using cookies or authentication headers
+}));
 // Increased body parser size limit for base64 files
 app.use(express.json({ limit: '100mb' })); // ⬅️ Set it higher to be safe
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
