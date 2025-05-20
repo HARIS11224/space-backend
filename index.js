@@ -20,7 +20,7 @@ connectDB();
 app.use(cors({
   origin: [
     'https://spacesketch-admin-i9tny1vf9-muhammad-haris-projects-ba1b58dc.vercel.app', // your frontend
-    'http://localhost:5173' // for local dev (optional)
+    'http://localhost:5174' // for local dev (optional)
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true // if using cookies or authentication headers
