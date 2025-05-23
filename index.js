@@ -2,41 +2,65 @@ const express = require('express');
 const connectDB = require('./config/db');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const jwt = require('jsonwebtoken'); // ✅ add this
 const authRoutes = require('./routes/authRoutes');
 const modelRoutes = require('./routes/modelsRoutes');
 const userRoutes = require('./routes/userRoutes');
 const itemRoutes = require('./routes/itemRoutes');
+const contactRoutes = require('./routes/contact');
 const path = require("path");
 const texturesRoute = require('./routes/textures');
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const SECRET_KEY = process.env.JWT_SECRET || 'your_secret_key'; // ✅ use env if available
 
 // Connect Database
 connectDB();
 
 // Middleware
-app.use(cors({
-  origin: [
-    'https://spacesketch-admin-i9tny1vf9-muhammad-haris-projects-ba1b58dc.vercel.app', // your frontend
-    'http://localhost:5174' // for local dev (optional)
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true // if using cookies or authentication headers
-}));
-// Increased body parser size limit for base64 files
-app.use(express.json({ limit: '100mb' })); // ⬅️ Set it higher to be safe
+app.use(cors());
+app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
+
 // Static folders
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/Decor', express.static(path.join(__dirname, 'Decor')));
 app.use('/api/textures', texturesRoute);
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/models', modelRoutes);
-app.use('/api', itemRoutes); // better to mount on /api/items to be RESTful
+app.use('/api', itemRoutes);
+app.use('/api', contactRoutes);
+
+// ✅ Admin Login Route
+app.post('/api/admin/login', (req, res) => {
+  const { username, password } = req.body;
+
+  if (username === 'admin' && password === 'admin123') {
+    const token = jwt.sign({ role: 'admin' }, SECRET_KEY, { expiresIn: '1h' });
+    return res.json({ success: true, token });
+  }
+
+  return res.status(401).json({ success: false, message: 'Invalid credentials' });
+});
+
+// ✅ Protected Route Example
+app.get('/api/admin/protected', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.sendStatus(401);
+
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY);
+    return res.json({ message: 'Authorized', user: decoded });
+  } catch {
+    return res.sendStatus(403);
+  }
+});
 
 // Route logging utility
 app.on('listening', () => {
